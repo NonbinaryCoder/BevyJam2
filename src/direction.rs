@@ -1,8 +1,9 @@
 use bevy::prelude::*;
-use std::ops::*;
+use std::{f32::consts::PI, ops::*};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Side {
+    #[default]
     North,
     East,
     South,
@@ -17,6 +18,37 @@ impl Side {
             East => West,
             South => North,
             West => East,
+        }
+    }
+
+    pub fn rotate_left(self) -> Side {
+        use Side::*;
+        match self {
+            North => West,
+            East => North,
+            South => East,
+            West => South,
+        }
+    }
+
+    pub fn rotate_right(self) -> Side {
+        use Side::*;
+        match self {
+            North => East,
+            East => South,
+            South => West,
+            West => North,
+        }
+    }
+
+    /// Returns this as an angle in radians, with `North` being 0
+    pub fn as_angle(self) -> f32 {
+        use Side::*;
+        match self {
+            North => 0.0,
+            East => PI / 2.0,
+            South => PI,
+            West => (PI * 3.0) / 2.0,
         }
     }
 

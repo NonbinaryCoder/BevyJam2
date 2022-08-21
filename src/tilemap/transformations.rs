@@ -76,7 +76,7 @@ pub fn world_to_grid_pos(mut world_pos: Vec2) -> GridPos {
 
 /// Returns the grid space position of the cursor,
 /// or `None` if the cursor is not above a window.
-pub fn cursor_to_grid(inputs: CursorToWorldInputs) -> Option<GridPos> {
+pub fn cursor_to_grid_pos(inputs: CursorToWorldInputs) -> Option<GridPos> {
     cursor_to_world_pos(inputs).map(|world_pos| world_to_grid_pos(world_pos))
 }
 

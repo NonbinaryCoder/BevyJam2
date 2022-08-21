@@ -61,7 +61,7 @@ fn create_atlas_system(
             };
 
             commands.insert_resource(Tilemap {
-                data: HashMap::new(),
+                data: HashMap::with_capacity(super::MIN_MAP_SIZE),
                 textures: texture_map,
             });
 

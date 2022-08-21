@@ -4,6 +4,8 @@ use bevy::{prelude::*, utils::HashMap};
 mod setup;
 mod transformations;
 
+pub const MIN_MAP_SIZE: usize = 16;
+
 pub use transformations::*;
 
 pub struct Plugin;
@@ -21,8 +23,8 @@ pub struct Tilemap {
 }
 
 #[derive(Debug)]
-pub enum TileBuilder {
-    Belt(Side),
+pub enum MachineType {
+    Belt,
 }
 
 #[derive(Debug)]
@@ -32,7 +34,7 @@ pub enum Tile {
 
 #[derive(Debug)]
 pub struct TextureMap {
-    belt: SideArr<usize>,
+    pub belt: SideArr<usize>,
     atlas: Handle<TextureAtlas>,
 }
 
@@ -40,14 +42,39 @@ pub struct TextureMap {
 struct TileComponent;
 
 impl Tilemap {
-    pub fn add(&mut self, pos: IVec2, tile: TileBuilder, commands: &mut Commands) {
+    /// Returns the texture atlas this takes textures from
+    pub fn atlas(&self) -> &Handle<TextureAtlas> {
+        &self.textures.atlas
+    }
+
+    /// Returns the texture map this is using
+    pub fn textures(&self) -> &TextureMap {
+        &self.textures
+    }
+
+    pub fn get(&self, tile: IVec2) -> Option<&Tile> {
+        self.data.get(&tile)
+    }
+
+    /// Adds a tile to an empty tilemap square
+    ///
+    /// # Panics
+    ///
+    /// Panics if the square is occupied
+    pub fn add(
+        &mut self,
+        pos: IVec2,
+        tile: MachineType,
+        facing_side: Side,
+        commands: &mut Commands,
+    ) {
         match tile {
-            TileBuilder::Belt(side) => {
+            MachineType::Belt => {
                 let entity = commands
                     .spawn_bundle(SpriteSheetBundle {
                         transform: transform_from_grid_pos(pos, 4.0),
                         sprite: TextureAtlasSprite {
-                            index: self.textures.belt[side],
+                            index: self.textures.belt[facing_side],
                             custom_size: Some(Vec2::ONE),
                             ..default()
                         },
@@ -55,8 +82,20 @@ impl Tilemap {
                         ..default()
                     })
                     .id();
-                self.data.try_insert(pos, Tile::Belt(side, entity)).unwrap();
+                self.data
+                    .try_insert(pos, Tile::Belt(facing_side, entity))
+                    .unwrap();
             }
+        }
+    }
+}
+
+impl MachineType {
+    /// The size of this machine in tiles
+    pub fn size(self) -> UVec2 {
+        use MachineType::*;
+        match self {
+            Belt => UVec2::ONE,
         }
     }
 }

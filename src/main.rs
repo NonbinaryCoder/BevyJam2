@@ -34,12 +34,4 @@ fn startup_system(mut commands: Commands) {
         },
         ..default()
     });
-
-    commands.spawn_bundle(SpriteBundle {
-        sprite: Sprite {
-            custom_size: Some(Vec2::ONE),
-            ..default()
-        },
-        ..default()
-    });
 }
