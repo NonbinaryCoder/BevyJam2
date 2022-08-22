@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -29,33 +30,6 @@ pub struct CursorToWorldInputs<'a> {
     pub camera_transform: &'a GlobalTransform,
 }
 
-/// Returns the world space position of the cursor,
-/// or `None` if the cursor is not above a window.
-/// From https://bevy-cheatbook.github.io/cookbook/cursor2world.html
-pub fn cursor_to_world_pos(inputs: CursorToWorldInputs) -> Option<Vec2> {
-    let CursorToWorldInputs {
-        windows,
-        camera,
-        camera_transform,
-    } = inputs;
-
-    let window = match camera.target {
-        bevy::render::camera::RenderTarget::Window(id) => windows.get(id).unwrap(),
-        _ => windows.get_primary().unwrap(),
-    };
-
-    window.cursor_position().map(|screen_pos| {
-        screen_to_world_pos(
-            ScreenToWorldInputs {
-                window,
-                camera,
-                camera_transform,
-            },
-            screen_pos,
-        )
-    })
-}
-
 /// A position on the grid calculated from a position in world space
 #[derive(Debug, Clone, Copy)]
 pub struct GridPos {
@@ -74,15 +48,15 @@ pub fn world_to_grid_pos(mut world_pos: Vec2) -> GridPos {
     }
 }
 
-/// Returns the grid space position of the cursor,
-/// or `None` if the cursor is not above a window.
-pub fn cursor_to_grid_pos(inputs: CursorToWorldInputs) -> Option<GridPos> {
-    cursor_to_world_pos(inputs).map(|world_pos| world_to_grid_pos(world_pos))
+pub fn screen_to_grid_pos(inputs: ScreenToWorldInputs, screen_pos: Vec2) -> GridPos {
+    let world_pos = screen_to_world_pos(inputs, screen_pos);
+    world_to_grid_pos(world_pos)
 }
 
-pub fn transform_from_grid_pos(grid_pos: IVec2, z: f32) -> Transform {
+pub fn transform_from_grid_pos(grid_pos: IVec2, z: f32, facing_side: Side) -> Transform {
     Transform {
         translation: Vec3::new(grid_pos.x as f32, grid_pos.y as f32, z),
+        rotation: facing_side.as_quat(),
         ..default()
     }
 }

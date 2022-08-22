@@ -22,7 +22,7 @@ pub struct Tilemap {
     textures: TextureMap,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MachineType {
     Belt,
 }
@@ -34,8 +34,9 @@ pub enum Tile {
 
 #[derive(Debug)]
 pub struct TextureMap {
-    pub belt: SideArr<usize>,
-    atlas: Handle<TextureAtlas>,
+    pub delete_tool: usize,
+    pub belt: usize,
+    pub atlas: Handle<TextureAtlas>,
 }
 
 #[derive(Debug, Component)]
@@ -56,12 +57,8 @@ impl Tilemap {
         self.data.get(&tile)
     }
 
-    /// Adds a tile to an empty tilemap square
-    ///
-    /// # Panics
-    ///
-    /// Panics if the square is occupied
-    pub fn add(
+    /// Adds a tile to the tilemap if there is space for it
+    pub fn try_add(
         &mut self,
         pos: IVec2,
         tile: MachineType,
@@ -69,12 +66,12 @@ impl Tilemap {
         commands: &mut Commands,
     ) {
         match tile {
-            MachineType::Belt => {
+            MachineType::Belt => self.data.entry(pos).or_insert_with(|| {
                 let entity = commands
                     .spawn_bundle(SpriteSheetBundle {
-                        transform: transform_from_grid_pos(pos, 4.0),
+                        transform: transform_from_grid_pos(pos, 4.0, facing_side),
                         sprite: TextureAtlasSprite {
-                            index: self.textures.belt[facing_side],
+                            index: self.textures.belt,
                             custom_size: Some(Vec2::ONE),
                             ..default()
                         },
@@ -82,10 +79,19 @@ impl Tilemap {
                         ..default()
                     })
                     .id();
-                self.data
-                    .try_insert(pos, Tile::Belt(facing_side, entity))
-                    .unwrap();
-            }
+                Tile::Belt(facing_side, entity)
+            }),
+        };
+    }
+
+    /// Removes a tile from the tilemap
+    pub fn remove(&mut self, pos: IVec2, commands: &mut Commands) {
+        match self.data.remove(&pos) {
+            None => return,
+            Some(Tile::Belt(_, entity)) => commands.entity(entity).despawn(),
+        }
+        if self.data.capacity() > MIN_MAP_SIZE.max(self.data.len()) {
+            self.data.shrink_to(MIN_MAP_SIZE.max(self.data.len() + 8));
         }
     }
 }

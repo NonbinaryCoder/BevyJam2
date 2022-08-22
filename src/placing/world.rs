@@ -1,4 +1,4 @@
-use super::ToolDirection;
+use super::{Tool, ToolDirection};
 use crate::{prelude::*, tilemap::*};
 use bevy::prelude::*;
 
@@ -12,14 +12,14 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_system_set(SystemSet::on_exit(AppState::LoadingAssets).with_system(setup_system))
             .add_system_set(
                 SystemSet::on_update(AppState::Game)
-                    .with_system(place_tiles_system)
+                    .with_system(use_tool_system)
                     .with_system(cursor_system),
             );
     }
 }
 
 #[derive(Debug, Component)]
-struct Cursor {
+pub struct Cursor {
     target: IVec2,
     is_visible: bool,
 }
@@ -28,7 +28,7 @@ fn setup_system(mut commands: Commands, tilemap: Res<Tilemap>) {
     commands
         .spawn_bundle(SpriteSheetBundle {
             sprite: TextureAtlasSprite {
-                index: tilemap.textures().belt[Side::North].clone(),
+                index: tilemap.textures().delete_tool.clone(),
                 custom_size: Some(Vec2::ONE),
                 color: Color::NONE,
                 ..default()
@@ -42,29 +42,18 @@ fn setup_system(mut commands: Commands, tilemap: Res<Tilemap>) {
         });
 }
 
-fn place_tiles_system(
+fn use_tool_system(
     mut commands: Commands,
-    windows: Res<Windows>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    mouse_input: Res<MouseInput>,
     mut tilemap: ResMut<Tilemap>,
+    tool: Res<Tool>,
     placing_direction: Res<ToolDirection>,
 ) {
-    let (camera, camera_transform) = camera_query.single();
-    let place_buttons = [MouseButton::Left, MouseButton::Right];
-    if mouse_buttons.any_pressed(place_buttons) | mouse_buttons.any_just_pressed(place_buttons) {
-        if let Some(grid_pos) = cursor_to_grid_pos(CursorToWorldInputs {
-            windows: &windows,
-            camera,
-            camera_transform,
-        }) {
-            if tilemap.get(grid_pos.tile).is_none() {
-                tilemap.add(
-                    grid_pos.tile,
-                    MachineType::Belt,
-                    placing_direction.0,
-                    &mut commands,
-                );
+    if let Some(pos) = mouse_input.clicked_pos() {
+        match &*tool {
+            Tool::Delete => tilemap.remove(pos.tile, &mut commands),
+            Tool::Place(machine_type) => {
+                tilemap.try_add(pos.tile, *machine_type, placing_direction.0, &mut commands);
             }
         }
     }
@@ -74,8 +63,7 @@ fn cursor_system(
     mut cursor_query: Query<(&mut Cursor, &mut Transform, &mut TextureAtlasSprite)>,
     placing_direction: Res<ToolDirection>,
     tilemap: Res<Tilemap>,
-    windows: Res<Windows>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
+    mouse_input: Res<MouseInput>,
     time: Res<Time>,
 ) {
     let (mut cursor, mut transform, mut sprite) = cursor_query.single_mut();
@@ -83,13 +71,7 @@ fn cursor_system(
     let ideal_rotation = placing_direction.0.as_angle();
     transform.rotation = Quat::from_axis_angle(-Vec3::Z, ideal_rotation);
 
-    let (camera, camera_transform) = camera_query.single();
-    let ideal_position = cursor_to_grid_pos(CursorToWorldInputs {
-        windows: &windows,
-        camera,
-        camera_transform,
-    });
-    if let Some(ideal_position) = ideal_position {
+    if let Some(ideal_position) = mouse_input.pos {
         cursor.target = ideal_position.tile;
         sprite.color = match tilemap.get(ideal_position.tile) {
             Some(_) => CURSOR_COLOR_ERR,

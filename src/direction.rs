@@ -52,6 +52,17 @@ impl Side {
         }
     }
 
+    /// Returns a quat facing towards this side, with `north` being the identity
+    pub fn as_quat(self) -> Quat {
+        use Side::*;
+        match self {
+            North => Quat::IDENTITY,
+            East => Quat::from_rotation_z(PI / 2.0),
+            South => Quat::from_rotation_z(PI),
+            West => Quat::from_rotation_z((PI * 3.0) / 2.0),
+        }
+    }
+
     /// Figures out which side a hitvec is closest to
     pub fn from_hitvec(hitvec: Vec2) -> Side {
         let hitvec = hitvec - Vec2::splat(0.5);

@@ -1,13 +1,16 @@
-use crate::prelude::*;
+use crate::{prelude::*, tilemap::MachineType};
 use bevy::prelude::*;
 
+pub mod toolbar;
 mod world;
 
 pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(world::Plugin)
+        app.add_plugin(toolbar::Plugin)
+            .add_plugin(world::Plugin)
+            .init_resource::<Tool>()
             .init_resource::<ToolDirection>()
             .add_system_set(
                 SystemSet::on_update(AppState::Game).with_system(change_placing_direction_system),
@@ -15,7 +18,14 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum Tool {
+    #[default]
+    Delete,
+    Place(MachineType),
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDirection(Side);
 
 fn change_placing_direction_system(
