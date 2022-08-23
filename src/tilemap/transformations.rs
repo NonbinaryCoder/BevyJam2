@@ -56,7 +56,7 @@ pub fn screen_to_grid_pos(inputs: ScreenToWorldInputs, screen_pos: Vec2) -> Grid
 pub fn transform_from_grid_pos(grid_pos: IVec2, z: f32, facing_side: Side) -> Transform {
     Transform {
         translation: Vec3::new(grid_pos.x as f32, grid_pos.y as f32, z),
-        rotation: facing_side.as_quat(),
+        rotation: facing_side.to_quat(),
         ..default()
     }
 }

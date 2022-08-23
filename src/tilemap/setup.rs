@@ -18,6 +18,7 @@ struct TileTextureHandles(Vec<HandleUntyped>);
 fn startup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut handles = asset_server.load_folder("tiles").unwrap();
     handles.append(&mut asset_server.load_folder("ui").unwrap());
+    handles.append(&mut asset_server.load_folder("items").unwrap());
     commands.insert_resource(TileTextureHandles(handles));
 }
 
@@ -53,6 +54,10 @@ fn create_atlas_system(
             let texture_map = TextureMap {
                 delete_tool: handle_from_name("ui/delete.png"),
                 belt: handle_from_name("tiles/belt_0.png"),
+                item_a: handle_from_name("items/a.png"),
+                item_b: handle_from_name("items/b.png"),
+                item_c: handle_from_name("items/c.png"),
+                item_d: handle_from_name("items/d.png"),
                 atlas: atlases.add(atlas),
             };
 

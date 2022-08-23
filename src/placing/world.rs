@@ -68,12 +68,12 @@ fn cursor_system(
 ) {
     let (mut cursor, mut transform, mut sprite) = cursor_query.single_mut();
 
-    let ideal_rotation = placing_direction.0.as_angle();
-    transform.rotation = Quat::from_axis_angle(-Vec3::Z, ideal_rotation);
+    let ideal_rotation = placing_direction.0.to_angle();
+    transform.rotation = Quat::from_rotation_z(ideal_rotation);
 
     if let Some(ideal_position) = mouse_input.pos {
         cursor.target = ideal_position.tile;
-        sprite.color = match tilemap.get(ideal_position.tile) {
+        sprite.color = match tilemap.get_tile(ideal_position.tile) {
             Some(_) => CURSOR_COLOR_ERR,
             None => CURSOR_COLOR_OK,
         };

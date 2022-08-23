@@ -36,6 +36,10 @@ pub enum Tile {
 pub struct TextureMap {
     pub delete_tool: usize,
     pub belt: usize,
+    pub item_a: usize,
+    pub item_b: usize,
+    pub item_c: usize,
+    pub item_d: usize,
     pub atlas: Handle<TextureAtlas>,
 }
 
@@ -53,7 +57,7 @@ impl Tilemap {
         &self.textures
     }
 
-    pub fn get(&self, tile: IVec2) -> Option<&Tile> {
+    pub fn get_tile(&self, tile: IVec2) -> Option<&Tile> {
         self.data.get(&tile)
     }
 

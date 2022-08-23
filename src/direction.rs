@@ -1,7 +1,13 @@
 use bevy::prelude::*;
-use std::{f32::consts::PI, ops::*};
+use std::f32::consts::PI;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Axis2d {
+    X,
+    Y,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Side {
     #[default]
     North,
@@ -42,40 +48,38 @@ impl Side {
     }
 
     /// Returns this as an angle in radians, with `North` being 0
-    pub fn as_angle(self) -> f32 {
+    pub fn to_angle(self) -> f32 {
         use Side::*;
         match self {
             North => 0.0,
-            East => PI / 2.0,
+            East => (PI * 3.0) / 2.0,
             South => PI,
-            West => (PI * 3.0) / 2.0,
+            West => PI / 2.0,
         }
     }
 
-    /// Returns a quat facing towards this side, with `north` being the identity
-    pub fn as_quat(self) -> Quat {
+    pub fn to_vec2(self) -> Vec2 {
         use Side::*;
         match self {
-            North => Quat::IDENTITY,
-            East => Quat::from_rotation_z(PI / 2.0),
-            South => Quat::from_rotation_z(PI),
-            West => Quat::from_rotation_z((PI * 3.0) / 2.0),
+            North => Vec2::Y,
+            East => Vec2::X,
+            South => -Vec2::Y,
+            West => -Vec2::X,
         }
     }
 
-    /// Figures out which side a hitvec is closest to
-    pub fn from_hitvec(hitvec: Vec2) -> Side {
-        let hitvec = hitvec - Vec2::splat(0.5);
-        SideArr {
-            north: hitvec.y,
-            east: hitvec.x,
-            south: -hitvec.y,
-            west: -hitvec.x,
+    /// Returns a quat facing towards this side, with `North` being the identity
+    pub fn to_quat(self) -> Quat {
+        Quat::from_rotation_z(self.to_angle())
+    }
+
+    /// Returns the axis this faces (for example `North` is `Y`)
+    pub fn axis(self) -> Axis2d {
+        use Side::*;
+        match self {
+            North | South => Axis2d::Y,
+            East | West => Axis2d::X,
         }
-        .into_iter_labeled()
-        .max_by(|(_, x), (_, y)| x.total_cmp(y))
-        .unwrap()
-        .0
     }
 }
 
@@ -85,34 +89,4 @@ pub struct SideArr<T> {
     pub east: T,
     pub south: T,
     pub west: T,
-}
-
-impl<T> SideArr<T> {
-    /// Consumes this,
-    /// returning an iterator over it's elements in NESW order,
-    /// labelled with the side they are from
-    pub fn into_iter_labeled(self) -> std::array::IntoIter<(Side, T), 4> {
-        use Side::*;
-        [
-            (North, self.north),
-            (East, self.east),
-            (South, self.south),
-            (West, self.west),
-        ]
-        .into_iter()
-    }
-}
-
-impl<T> Index<Side> for SideArr<T> {
-    type Output = T;
-
-    fn index(&self, index: Side) -> &Self::Output {
-        use Side::*;
-        match index {
-            North => &self.north,
-            East => &self.east,
-            South => &self.south,
-            West => &self.west,
-        }
-    }
 }

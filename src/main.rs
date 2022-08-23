@@ -2,6 +2,7 @@ use bevy::{prelude::*, render::texture::ImageSettings};
 use tilemap::GridPos;
 
 mod direction;
+mod items;
 mod placing;
 mod tilemap;
 
@@ -22,8 +23,9 @@ fn main() {
         .init_resource::<MouseInput>()
         .add_state(AppState::LoadingAssets)
         .add_plugins(DefaultPlugins)
-        .add_plugin(tilemap::Plugin)
+        .add_plugin(items::Plugin)
         .add_plugin(placing::Plugin)
+        .add_plugin(tilemap::Plugin)
         .add_startup_system(startup_system)
         .add_system_set_to_stage(
             CoreStage::PreUpdate,
