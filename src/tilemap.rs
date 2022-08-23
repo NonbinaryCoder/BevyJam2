@@ -25,17 +25,20 @@ pub struct Tilemap {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MachineType {
     Belt,
+    Ice,
 }
 
 #[derive(Debug)]
 pub enum Tile {
     Belt(Side, Entity),
+    Ice(Entity),
 }
 
 #[derive(Debug)]
 pub struct TextureMap {
     pub delete_tool: usize,
     pub belt: usize,
+    pub ice: usize,
     pub item_a: usize,
     pub item_b: usize,
     pub item_c: usize,
@@ -69,21 +72,28 @@ impl Tilemap {
         facing_side: Side,
         commands: &mut Commands,
     ) {
+        let mut spawn_square = |index| {
+            commands
+                .spawn_bundle(SpriteSheetBundle {
+                    transform: transform_from_grid_pos(pos, 4.0, facing_side),
+                    sprite: TextureAtlasSprite {
+                        index,
+                        custom_size: Some(Vec2::ONE),
+                        ..default()
+                    },
+                    texture_atlas: self.textures.atlas.clone(),
+                    ..default()
+                })
+                .id()
+        };
         match tile {
             MachineType::Belt => self.data.entry(pos).or_insert_with(|| {
-                let entity = commands
-                    .spawn_bundle(SpriteSheetBundle {
-                        transform: transform_from_grid_pos(pos, 4.0, facing_side),
-                        sprite: TextureAtlasSprite {
-                            index: self.textures.belt,
-                            custom_size: Some(Vec2::ONE),
-                            ..default()
-                        },
-                        texture_atlas: self.textures.atlas.clone(),
-                        ..default()
-                    })
-                    .id();
+                let entity = spawn_square(self.textures.belt);
                 Tile::Belt(facing_side, entity)
+            }),
+            MachineType::Ice => self.data.entry(pos).or_insert_with(|| {
+                let entity = spawn_square(self.textures.ice);
+                Tile::Ice(entity)
             }),
         };
     }
@@ -92,7 +102,9 @@ impl Tilemap {
     pub fn remove(&mut self, pos: IVec2, commands: &mut Commands) {
         match self.data.remove(&pos) {
             None => return,
-            Some(Tile::Belt(_, entity)) => commands.entity(entity).despawn(),
+            Some(Tile::Belt(_, entity)) | Some(Tile::Ice(entity)) => {
+                commands.entity(entity).despawn()
+            }
         }
         if self.data.capacity() > MIN_MAP_SIZE.max(self.data.len()) {
             self.data.shrink_to(MIN_MAP_SIZE.max(self.data.len() + 8));
@@ -105,7 +117,7 @@ impl MachineType {
     pub fn size(self) -> UVec2 {
         use MachineType::*;
         match self {
-            Belt => UVec2::ONE,
+            Belt | Ice => UVec2::ONE,
         }
     }
 }

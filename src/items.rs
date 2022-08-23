@@ -1,7 +1,7 @@
 use crate::{prelude::*, tilemap::*};
 use bevy::{math::Vec3Swizzles, prelude::*};
 
-const BELT_SPEED: f32 = 1.0;
+const BELT_SPEED: f32 = 2.0;
 
 pub struct Plugin;
 
@@ -74,7 +74,7 @@ fn item_momentum_system(
                         let seperation = pos_fract(transform.translation.$cross + 0.5) - 0.5;
                         let dist = seperation.abs();
                         transform.translation.$cross -=
-                            seperation.signum() * dist.min(time.delta_seconds()) * BELT_SPEED;
+                            seperation.signum() * dist.min(time.delta_seconds() * BELT_SPEED);
                         if dist < f32::EPSILON {
                             momentum.0.$main = side.to_vec2().$main * BELT_SPEED;
                         }
@@ -89,6 +89,7 @@ fn item_momentum_system(
                     }
                 }
             }
+            Some(Tile::Ice(_)) => (),
         }
 
         transform.translation += (momentum.0 * time.delta_seconds()).extend(0.0);

@@ -42,12 +42,12 @@ fn setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .insert(Background)
         .with_children(|toolbar| {
+            use MachineType::*;
+            use Tool::*;
             for (index, (tool, image)) in [
-                (Tool::Delete, asset_server.load("ui/delete.png")),
-                (
-                    Tool::Place(MachineType::Belt),
-                    asset_server.load("tiles/belt_0.png"),
-                ),
+                (Delete, asset_server.load("ui/delete.png")),
+                (Place(Belt), asset_server.load("tiles/belt_0.png")),
+                (Place(Ice), asset_server.load("tiles/ice.png")),
             ]
             .into_iter()
             .enumerate()
@@ -77,6 +77,7 @@ impl Tool {
         match self {
             Tool::Delete => textures.delete_tool,
             Tool::Place(MachineType::Belt) => textures.belt,
+            Tool::Place(MachineType::Ice) => textures.ice,
         }
     }
 }
