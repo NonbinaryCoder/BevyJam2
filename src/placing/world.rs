@@ -3,7 +3,6 @@ use crate::{prelude::*, tilemap::*};
 use bevy::prelude::*;
 
 const CURSOR_COLOR_OK: Color = Color::rgba(1.0, 1.0, 1.0, 0.5);
-const CURSOR_COLOR_ERR: Color = Color::rgba(1.0, 0.0, 0.0, 0.5);
 
 pub struct Plugin;
 
@@ -64,10 +63,8 @@ fn use_tool_system(
 fn cursor_system(
     mut cursor_query: Query<(&mut Cursor, &mut Transform, &mut TextureAtlasSprite)>,
     placing_direction: Res<ToolDirection>,
-    tilemap: Res<Tilemap>,
     mouse_input: Res<MouseInput>,
     time: Res<Time>,
-    tool: Res<Tool>,
 ) {
     let (mut cursor, mut transform, mut sprite) = cursor_query.single_mut();
 

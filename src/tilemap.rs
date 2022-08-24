@@ -97,16 +97,6 @@ impl Tilemap {
         self.data.get(&tile)
     }
 
-    #[must_use]
-    pub fn is_area_clear(&self, cursor_position: IVec2, size: UVec2, offset: IVec2) -> bool {
-        let min = cursor_position + offset;
-        let max = size.as_ivec2() + offset + cursor_position;
-        let is_not_clear = (min.x..max.x)
-            .flat_map(|x| (min.y..max.y).map(move |y| IVec2::new(x, y)))
-            .any(|key| self.data.contains_key(&key));
-        !is_not_clear
-    }
-
     /// Adds a tile to the tilemap if there is space for it
     pub fn try_add(
         &mut self,
@@ -219,16 +209,6 @@ impl MachineType {
         match self {
             Combiner2x1 => Vec2::new(-0.5, 0.0),
             _ => Vec2::ZERO,
-        }
-    }
-
-    /// The offset of the northwest corner of the grid size of this from it's grid position
-    #[must_use]
-    pub fn grid_offset(self) -> IVec2 {
-        use MachineType::*;
-        match self {
-            Combiner2x1 => IVec2::new(-1, 0),
-            _ => IVec2::ZERO,
         }
     }
 }

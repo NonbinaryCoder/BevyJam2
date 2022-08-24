@@ -41,14 +41,6 @@ impl Tool {
             _ => Vec2::ZERO,
         }
     }
-
-    #[must_use]
-    pub fn grid_offset(self) -> IVec2 {
-        match self {
-            Tool::Place(m) => m.grid_offset(),
-            _ => IVec2::ZERO,
-        }
-    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
