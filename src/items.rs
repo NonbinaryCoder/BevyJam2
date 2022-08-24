@@ -16,7 +16,7 @@ impl bevy::prelude::Plugin for Plugin {
 }
 
 #[derive(Debug, Component)]
-enum Item {
+pub enum Item {
     A,
     B,
     C,
@@ -33,23 +33,33 @@ fn temp_spawn_items_system(
     tilemap: Res<Tilemap>,
     items_query: Query<Entity, With<Item>>,
 ) {
-    if let Some(pos) = mouse_input
-        .pos
-        .filter(|_| keys.just_pressed(KeyCode::Space))
-    {
-        commands
-            .spawn_bundle(SpriteSheetBundle {
-                sprite: TextureAtlasSprite {
-                    index: tilemap.textures().item_a.clone(),
-                    custom_size: Some(Vec2::splat(0.5)),
+    if let Some(pos) = mouse_input.pos {
+        let item_data = if keys.just_pressed(KeyCode::Key1) {
+            Some((Item::A, tilemap.textures().item_a.clone()))
+        } else if keys.just_pressed(KeyCode::Key2) {
+            Some((Item::B, tilemap.textures().item_b.clone()))
+        } else if keys.just_pressed(KeyCode::Key3) {
+            Some((Item::C, tilemap.textures().item_c.clone()))
+        } else if keys.just_pressed(KeyCode::Key4) {
+            Some((Item::D, tilemap.textures().item_d.clone()))
+        } else {
+            None
+        };
+        if let Some((item, index)) = item_data {
+            commands
+                .spawn_bundle(SpriteSheetBundle {
+                    sprite: TextureAtlasSprite {
+                        index,
+                        custom_size: Some(Vec2::splat(0.5)),
+                        ..default()
+                    },
+                    texture_atlas: tilemap.atlas().clone(),
+                    transform: transform_from_grid_pos(pos.tile, 6.0, Side::North),
                     ..default()
-                },
-                texture_atlas: tilemap.atlas().clone(),
-                transform: transform_from_grid_pos(pos.tile, 6.0, Side::North),
-                ..default()
-            })
-            .insert(Momentum::default())
-            .insert(Item::A);
+                })
+                .insert(Momentum::default())
+                .insert(item);
+        }
     }
 
     if keys.just_pressed(KeyCode::LShift) {
@@ -90,6 +100,7 @@ fn item_momentum_system(
                 }
             }
             Some(Tile::Ice(_)) => (),
+            _ => todo!(),
         }
 
         transform.translation += (momentum.0 * time.delta_seconds()).extend(0.0);

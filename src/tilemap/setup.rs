@@ -55,6 +55,7 @@ fn create_atlas_system(
                 delete_tool: handle_from_name("ui/delete.png"),
                 belt: handle_from_name("tiles/belt_0.png"),
                 ice: handle_from_name("tiles/ice.png"),
+                combiner2x1: handle_from_name("tiles/combiner2x1.png"),
                 item_a: handle_from_name("items/a.png"),
                 item_b: handle_from_name("items/b.png"),
                 item_c: handle_from_name("items/c.png"),

@@ -16,7 +16,38 @@ pub enum Side {
     West,
 }
 
+macro_rules! convert_to_2d_vector {
+    ($name:ident, $type:ident) => {
+        pub fn $name(self) -> $type {
+            use Side::*;
+            match self {
+                North => $type::Y,
+                East => $type::X,
+                South => -$type::Y,
+                West => -$type::X,
+            }
+        }
+    };
+}
+
+macro_rules! rotate_2d_vector {
+    ($name:ident, $type:ident) => {
+        /// Takes a vector oriented `North` and returns one oriented this direction
+        #[must_use]
+        pub fn $name(self, v: $type) -> $type {
+            use Side::*;
+            match self {
+                North => v,
+                East => $type::new(v.y, -v.x),
+                South => $type::new(-v.x, -v.y),
+                West => $type::new(-v.y, v.x),
+            }
+        }
+    };
+}
+
 impl Side {
+    #[must_use]
     pub fn opposite(self) -> Side {
         use Side::*;
         match self {
@@ -58,15 +89,8 @@ impl Side {
         }
     }
 
-    pub fn to_vec2(self) -> Vec2 {
-        use Side::*;
-        match self {
-            North => Vec2::Y,
-            East => Vec2::X,
-            South => -Vec2::Y,
-            West => -Vec2::X,
-        }
-    }
+    convert_to_2d_vector!(to_vec2, Vec2);
+    convert_to_2d_vector!(to_ivec2, IVec2);
 
     /// Returns a quat facing towards this side, with `North` being the identity
     pub fn to_quat(self) -> Quat {
@@ -81,6 +105,8 @@ impl Side {
             East | West => Axis2d::X,
         }
     }
+
+    rotate_2d_vector!(rotate_vec2, Vec2);
 }
 
 #[derive(Debug)]

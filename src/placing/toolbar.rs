@@ -44,18 +44,26 @@ fn setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
         .with_children(|toolbar| {
             use MachineType::*;
             use Tool::*;
+
             for (index, (tool, image)) in [
                 (Delete, asset_server.load("ui/delete.png")),
                 (Place(Belt), asset_server.load("tiles/belt_0.png")),
                 (Place(Ice), asset_server.load("tiles/ice.png")),
+                (
+                    Place(Combiner2x1),
+                    asset_server.load("tiles/combiner2x1.png"),
+                ),
             ]
             .into_iter()
             .enumerate()
             {
+                let size = tool.size().as_vec2();
+                let aspect = size.y / size.x;
+                let size = Size::new(Val::Px(50.0), Val::Px(50.0 * aspect));
                 toolbar
                     .spawn_bundle(ButtonBundle {
                         style: Style {
-                            size: Size::new(Val::Px(50.0), Val::Px(50.0)),
+                            size,
                             margin: UiRect::all(Val::Px(5.0)),
                             ..default()
                         },
@@ -78,6 +86,7 @@ impl Tool {
             Tool::Delete => textures.delete_tool,
             Tool::Place(MachineType::Belt) => textures.belt,
             Tool::Place(MachineType::Ice) => textures.ice,
+            Tool::Place(MachineType::Combiner2x1) => textures.combiner2x1,
         }
     }
 }
@@ -86,7 +95,7 @@ fn change_tool_system(
     interaction_query: Query<(&Interaction, Entity), (With<ToolIcon>, Changed<Interaction>)>,
     mut icon_query: Query<(&ToolIcon, &mut UiColor)>,
     mut selected_tool: ResMut<Tool>,
-    mut cursor_query: Query<&mut TextureAtlasSprite, With<super::world::Cursor>>,
+    mut cursor_query: Query<(&mut TextureAtlasSprite, &mut super::world::Cursor)>,
     tilemap: Res<Tilemap>,
 ) {
     if let Some(new_tool) =
@@ -100,9 +109,12 @@ fn change_tool_system(
         for (_, mut color) in icon_query.iter_mut() {
             color.0 = DESELECTED_COLOR;
         }
-        let (tool, mut color) = icon_query.get_mut(new_tool).unwrap();
+        let (&ToolIcon { tool }, mut color) = icon_query.get_mut(new_tool).unwrap();
         color.0 = SELECTED_COLOR;
-        *selected_tool = tool.tool;
-        cursor_query.single_mut().index = tool.tool.icon(tilemap.textures());
+        *selected_tool = tool;
+        let (mut cursor_sprite, mut cursor) = cursor_query.single_mut();
+        cursor_sprite.index = tool.icon(tilemap.textures());
+        cursor_sprite.custom_size = Some(tool.size().as_vec2());
+        cursor.offset = tool.cursor_offset();
     }
 }

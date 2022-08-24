@@ -22,6 +22,7 @@ impl bevy::prelude::Plugin for Plugin {
 pub struct Cursor {
     target: IVec2,
     is_visible: bool,
+    pub offset: Vec2,
 }
 
 fn setup_system(mut commands: Commands, tilemap: Res<Tilemap>) {
@@ -39,6 +40,7 @@ fn setup_system(mut commands: Commands, tilemap: Res<Tilemap>) {
         .insert(Cursor {
             target: IVec2::ZERO,
             is_visible: false,
+            offset: Vec2::ZERO,
         });
 }
 
@@ -65,6 +67,7 @@ fn cursor_system(
     tilemap: Res<Tilemap>,
     mouse_input: Res<MouseInput>,
     time: Res<Time>,
+    tool: Res<Tool>,
 ) {
     let (mut cursor, mut transform, mut sprite) = cursor_query.single_mut();
 
@@ -73,15 +76,15 @@ fn cursor_system(
 
     if let Some(ideal_position) = mouse_input.pos {
         cursor.target = ideal_position.tile;
-        sprite.color = match tilemap.get_tile(ideal_position.tile) {
-            Some(_) => CURSOR_COLOR_ERR,
-            None => CURSOR_COLOR_OK,
-        };
+        sprite.color = CURSOR_COLOR_OK;
         if !cursor.is_visible {
             cursor.is_visible = true;
-            transform.translation = ideal_position.tile.as_vec2().extend(10.0);
+            transform.translation = ideal_position.tile.as_vec2().extend(10.0)
+                + placing_direction.0.rotate_vec2(cursor.offset).extend(0.0);
         } else {
-            let seperation = cursor.target.as_vec2().extend(10.0) - transform.translation;
+            let seperation = cursor.target.as_vec2().extend(10.0)
+                + placing_direction.0.rotate_vec2(cursor.offset).extend(0.0)
+                - transform.translation;
             transform.translation += seperation * 8.0 * time.delta_seconds();
         }
     } else {

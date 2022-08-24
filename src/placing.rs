@@ -25,6 +25,32 @@ pub enum Tool {
     Place(MachineType),
 }
 
+impl Tool {
+    #[must_use]
+    pub fn size(self) -> UVec2 {
+        match self {
+            Tool::Place(m) => m.size(),
+            _ => UVec2::ONE,
+        }
+    }
+
+    #[must_use]
+    pub fn cursor_offset(self) -> Vec2 {
+        match self {
+            Tool::Place(machine) => machine.cursor_offset(),
+            _ => Vec2::ZERO,
+        }
+    }
+
+    #[must_use]
+    pub fn grid_offset(self) -> IVec2 {
+        match self {
+            Tool::Place(m) => m.grid_offset(),
+            _ => IVec2::ZERO,
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDirection(Side);
 
